@@ -37,6 +37,8 @@ def extract_song_features(audio_path, duration=None):
         chroma = librosa.feature.chroma_stft(y=y, sr=sr)
         chroma_mean = np.mean(chroma)
         
+        print(chroma)
+        print(chroma.shape)
         # Determine the predominant key
         chroma_sum = np.sum(chroma, axis=1)
         key_index = np.argmax(chroma_sum)
