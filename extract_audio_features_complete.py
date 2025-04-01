@@ -186,7 +186,7 @@ def extract_all_features(audio_path, duration=None):
 def main():
     # Define the track IDs that exist in the MEMD_audio directory
     # Updated based on the files that actually exist
-    track_ids = [2, 3, 4, 5, 7, 8, 10, 12, 13]
+    track_ids = [2, 3, 4, 5, 7, 8, 10, 12, 13, 2000]
     
     # Create DataFrames to store the results
     basic_results = pd.DataFrame(columns=['track_id', 'rms', 'spectral', 'rolloff', 'Chromatic scale', 'Predominant Key', 'MFCC'])
@@ -252,8 +252,8 @@ def main():
     
     # Create a merged DataFrame with all features
     all_features = pd.merge(basic_results, tonality_results, on='track_id', how='outer')
-    all_features.to_csv('audio_all_features.csv', index=False)
-    print("All features merged and saved to audio_all_features.csv")
+    all_features.to_csv('audio_tonality_features_with_emotions.csv', index=False)
+    print("All features merged and saved to audio_tonality_features_with_emotions.csv")
 
 if __name__ == "__main__":
     main()
