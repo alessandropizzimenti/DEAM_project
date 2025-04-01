@@ -3,6 +3,46 @@ import librosa
 import numpy as np
 import pandas as pd
 import music21
+import argparse
+from pathlib import Path
+
+# Configurazione dei percorsi
+def get_project_paths(custom_audio_dir=None, custom_output_dir=None):
+    """
+    Definisce i percorsi del progetto in modo dinamico.
+    
+    Parameters:
+    -----------
+    custom_audio_dir : str, optional
+        Percorso personalizzato alla directory audio
+    custom_output_dir : str, optional
+        Percorso personalizzato per i file di output
+    
+    Returns:
+    --------
+    dict
+        Dizionario con i percorsi configurati
+    """
+    # Directory del progetto (directory principale)
+    base_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+    
+    # Directory audio
+    if custom_audio_dir:
+        audio_dir = Path(custom_audio_dir)
+    else:
+        audio_dir = base_dir / 'DEAM_audio' / 'MEMD_audio'
+    
+    # Directory output
+    if custom_output_dir:
+        output_dir = Path(custom_output_dir)
+    else:
+        output_dir = base_dir
+    
+    return {
+        'base_dir': base_dir,
+        'audio_dir': audio_dir,
+        'output_dir': output_dir
+    }
 
 def extract_audio_features(audio_path, duration=None):
     """
@@ -256,22 +296,38 @@ def extract_all_features(audio_path, duration=None):
         print(f"Error extracting all features for {audio_path}: {e}")
         return None
 
-def main():
+def main(args=None):
+    # Parse command line arguments if provided
+    if args is None:
+        parser = argparse.ArgumentParser(description='Extract audio features from DEAM dataset')
+        parser.add_argument('--audio-dir', type=str, help='Directory containing audio files')
+        parser.add_argument('--output-dir', type=str, help='Directory for output files')
+        parser.add_argument('--track-ids', type=str, help='Comma-separated list of track IDs to process')
+        args = parser.parse_args()
+    
+    # Get project paths with optional custom directories
+    paths = get_project_paths(
+        custom_audio_dir=args.audio_dir if hasattr(args, 'audio_dir') and args.audio_dir else None,
+        custom_output_dir=args.output_dir if hasattr(args, 'output_dir') and args.output_dir else None
+    )
+    
     # Define the track IDs that exist in the MEMD_audio directory
     # Updated based on the files that actually exist
-    track_ids = [2, 3, 4, 5, 7, 8, 10, 12, 13, 2000]
+    if hasattr(args, 'track_ids') and args.track_ids:
+        track_ids = [int(id.strip()) for id in args.track_ids.split(',')]
+    else:
+        track_ids = [2, 3, 4, 5, 7, 8, 10, 12, 13, 2000]
     
     # Create DataFrames to store the results
     basic_results = pd.DataFrame(columns=['track_id', 'rms', 'spectral', 'rolloff', 'Chromatic scale', 'Predominant Key', 'MFCC'])
     tonality_results = pd.DataFrame(columns=['track_id', 'key', 'mode', 'scale_name', 'key_full', 'key_correlation', 'scale_correlation', 'scale_pitches'])
     
-    # Audio folder path - using absolute path to ensure files are found
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    audio_folder = os.path.join(script_dir, 'DEAM_audio', 'MEMD_audio')
+    # Audio folder path
+    audio_folder = paths['audio_dir']
     
     # Check if the folder exists
     if not os.path.exists(audio_folder):
-        print(f"The folder {audio_folder} does not exist. Please update the path.")
+        print(f"La cartella audio {audio_folder} non esiste. Verifica il percorso.")
         return
     
     # Process each track
@@ -280,7 +336,7 @@ def main():
         audio_file = os.path.join(audio_folder, f"{track_id}.mp3")
         
         if os.path.exists(audio_file):
-            print(f"Processing track {track_id}...")
+            print(f"Elaborazione traccia {track_id}...")
             
             # Extract all features at once
             features = extract_all_features(audio_file)
@@ -311,24 +367,27 @@ def main():
                 })
                 tonality_results = pd.concat([tonality_results, tonality_row], ignore_index=True)
                 
-                print(f"Successfully processed track {track_id}")
+                print(f"Elaborazione completata per la traccia {track_id}")
             else:
-                print(f"Failed to extract features for track {track_id}")
+                print(f"Impossibile estrarre le caratteristiche per la traccia {track_id}")
         else:
-            print(f"Audio file for track {track_id} not found at {audio_file}")
+            print(f"File audio per la traccia {track_id} non trovato in {audio_file}")
     
     # Display the results
-    print("\nExtracted Basic Audio Features:")
+    print("\nCaratteristiche audio di base estratte:")
     print(basic_results)
     
-    print("\nExtracted Tonality and Scale Features:")
+    print("\nCaratteristiche di tonalità e scala estratte:")
     print(tonality_results)
     
     
     # Create a merged DataFrame with all features
     all_features = pd.merge(basic_results, tonality_results, on='track_id', how='outer')
-    all_features.to_csv('audio_tonality_features_with_emotions.csv', index=False)
-    print("All features merged and saved to audio_tonality_features_with_emotions.csv")
+    
+    # Save to the configured output directory
+    output_file = os.path.join(paths['output_dir'], 'audio_tonality_features_with_emotions.csv')
+    all_features.to_csv(output_file, index=False)
+    print(f"Tutte le caratteristiche sono state unite e salvate in {output_file}")
 
 if __name__ == "__main__":
     main()
