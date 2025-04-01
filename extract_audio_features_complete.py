@@ -71,6 +71,7 @@ def extract_audio_features(audio_path, duration=None):
 def extract_tonality_and_scale(audio_path, duration=None):
     """
     Extracts tonality and scale information from an audio file using music21.
+    Detects various scale types including major, minor, modal, pentatonic, and exotic scales.
     
     Parameters:
     -----------
@@ -105,20 +106,90 @@ def extract_tonality_and_scale(audio_path, duration=None):
         # Create a music21 note for the key
         key_note = music21.note.Note(key_name)
         
-        # Determine if the key is major or minor using music21
-        # We'll use a simple heuristic: check the relative strength of the 3rd and 6th scale degrees
-        major_third_idx = (key_index + 4) % 12  # Major third is 4 semitones up
-        minor_third_idx = (key_index + 3) % 12  # Minor third is 3 semitones up
-        
-        # If the major third is stronger than the minor third, it's likely major
-        mode = 'major' if chroma_sum[major_third_idx] > chroma_sum[minor_third_idx] else 'minor'
-        
-        # Create the appropriate scale
-        if mode == 'major':
-            scale = music21.scale.MajorScale(key_note.pitch)
-        else:
-            scale = music21.scale.MinorScale(key_note.pitch)
+        # Define scale patterns (semitone intervals from root)
+        scale_patterns = {
+            # Diatonic scales
+            'Major': [0, 2, 4, 5, 7, 9, 11],  # Ionian
+            'Natural Minor': [0, 2, 3, 5, 7, 8, 10],  # Aeolian
+            'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11],
+            'Melodic Minor': [0, 2, 3, 5, 7, 9, 11],
             
+            # Modal scales
+            'Ionian': [0, 2, 4, 5, 7, 9, 11],  # Same as Major
+            'Dorian': [0, 2, 3, 5, 7, 9, 10],
+            'Phrygian': [0, 1, 3, 5, 7, 8, 10],
+            'Lydian': [0, 2, 4, 6, 7, 9, 11],
+            'Mixolydian': [0, 2, 4, 5, 7, 9, 10],
+            'Aeolian': [0, 2, 3, 5, 7, 8, 10],  # Same as Natural Minor
+            'Locrian': [0, 1, 3, 5, 6, 8, 10],
+            
+            # Pentatonic scales
+            'Major Pentatonic': [0, 2, 4, 7, 9],
+            'Minor Pentatonic': [0, 3, 5, 7, 10],
+            
+            # Other scales
+            'Blues': [0, 3, 5, 6, 7, 10],
+            'Harmonic Major': [0, 2, 4, 5, 7, 8, 11],
+            'Neapolitan Major': [0, 1, 3, 5, 7, 9, 11],
+            'Neapolitan Minor': [0, 1, 3, 5, 7, 8, 11],
+            'Hungarian Minor': [0, 2, 3, 6, 7, 8, 11],
+            'Enigmatic': [0, 1, 4, 6, 8, 10, 11],
+            'Arabic': [0, 1, 4, 5, 7, 8, 11]  # Hijaz Maqam with characteristic augmented second
+        }
+        
+        # Calculate correlation for each scale pattern
+        scale_correlations = {}
+        for scale_name, pattern in scale_patterns.items():
+            correlation = 0
+            for interval in pattern:
+                note_idx = (key_index + interval) % 12
+                correlation += chroma_sum[note_idx]
+            # Normalize by pattern length
+            scale_correlations[scale_name] = correlation / len(pattern)
+        
+        # Find the best matching scale
+        best_scale = max(scale_correlations.items(), key=lambda x: x[1])
+        scale_name = best_scale[0]
+        scale_correlation = best_scale[1]
+        
+        # Determine the mode based on the scale name
+        if 'Minor' in scale_name:
+            mode = 'minor'
+        elif 'Major' in scale_name:
+            mode = 'major'
+        else:
+            # For modal and exotic scales, use the scale name as the mode
+            mode = scale_name.lower()
+        
+        # Create the appropriate scale using music21
+        if scale_name == 'Major' or scale_name == 'Ionian':
+            scale = music21.scale.MajorScale(key_note.pitch)
+        elif scale_name == 'Natural Minor' or scale_name == 'Aeolian':
+            scale = music21.scale.MinorScale(key_note.pitch)
+        elif scale_name == 'Harmonic Minor':
+            scale = music21.scale.HarmonicMinorScale(key_note.pitch)
+        elif scale_name == 'Melodic Minor':
+            scale = music21.scale.MelodicMinorScale(key_note.pitch)
+        elif scale_name == 'Dorian':
+            scale = music21.scale.DorianScale(key_note.pitch)
+        elif scale_name == 'Phrygian':
+            scale = music21.scale.PhrygianScale(key_note.pitch)
+        elif scale_name == 'Lydian':
+            scale = music21.scale.LydianScale(key_note.pitch)
+        elif scale_name == 'Mixolydian':
+            scale = music21.scale.MixolydianScale(key_note.pitch)
+        elif scale_name == 'Locrian':
+            scale = music21.scale.LocrianScale(key_note.pitch)
+        else:
+            # For scales not directly supported by music21, create a custom scale
+            pattern = scale_patterns[scale_name]
+            scale_degrees = []
+            for interval in pattern:
+                note_idx = (key_index + interval) % 12
+                scale_degrees.append(key_names[note_idx])
+            # Create a custom scale using music21
+            scale = music21.scale.ConcreteScale(music21.pitch.Pitch(key_name), scale_degrees)
+        
         # Get the scale pitches as string
         scale_pitches = [str(p) for p in scale.getPitches()]
         scale_pitches_str = ', '.join(scale_pitches)
@@ -127,14 +198,16 @@ def extract_tonality_and_scale(audio_path, duration=None):
         key_strength = float(chroma_sum[key_index] / np.mean(chroma_sum))
         
         # Create a key string representation
-        key_full = f"{key_name} {mode}"
+        key_full = f"{key_name} {scale_name}"
         
         # Create a dictionary with the extracted features
         features = {
             'key': key_name,
             'mode': mode,
+            'scale_name': scale_name,
             'key_full': key_full,
             'key_correlation': key_strength,
+            'scale_correlation': scale_correlation,
             'scale_pitches': scale_pitches_str
         }
         
@@ -190,7 +263,7 @@ def main():
     
     # Create DataFrames to store the results
     basic_results = pd.DataFrame(columns=['track_id', 'rms', 'spectral', 'rolloff', 'Chromatic scale', 'Predominant Key', 'MFCC'])
-    tonality_results = pd.DataFrame(columns=['track_id', 'key', 'mode', 'key_full', 'key_correlation', 'scale_pitches'])
+    tonality_results = pd.DataFrame(columns=['track_id', 'key', 'mode', 'scale_name', 'key_full', 'key_correlation', 'scale_correlation', 'scale_pitches'])
     
     # Audio folder path - using absolute path to ensure files are found
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -230,8 +303,10 @@ def main():
                     'track_id': [track_id],
                     'key': [features['key']],
                     'mode': [features['mode']],
+                    'scale_name': [features['scale_name']],
                     'key_full': [features['key_full']],
                     'key_correlation': [features['key_correlation']],
+                    'scale_correlation': [features['scale_correlation']],
                     'scale_pitches': [features['scale_pitches']]
                 })
                 tonality_results = pd.concat([tonality_results, tonality_row], ignore_index=True)
