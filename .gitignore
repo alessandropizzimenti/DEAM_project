@@ -3,3 +3,7 @@ DEAM_Annotations/
 DEAM_audio/
 features/
 metadata/
+emotion_prediction_results/
+harmonia-sonic-canvas/
+__pycache__/
+
