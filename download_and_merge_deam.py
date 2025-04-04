@@ -105,7 +105,7 @@ def main():
     annotations_dir = base_dir / 'DEAM_Annotations'
     
     # File delle caratteristiche audio
-    audio_features_path = base_dir / 'audio_tonality_features.csv'
+    audio_features_path = base_dir / 'audio_tonality_features_complete_20250404_133542.csv'
     
     # File delle annotazioni
     annotations_path = annotations_dir / 'annotations averaged per song' / 'song_level' / 'static_annotations_averaged_songs_1_2000.csv'

@@ -311,29 +311,43 @@ def main(args=None):
         custom_output_dir=args.output_dir if hasattr(args, 'output_dir') and args.output_dir else None
     )
     
-    # Define the track IDs that exist in the MEMD_audio directory
-    # Updated based on the files that actually exist
+    # Create DataFrames to store the results
+    basic_results = pd.DataFrame(columns=['track_id', 'rms', 'spectral', 'rolloff', 'Chromatic scale', 'Predominant Key', 'MFCC'])
+    tonality_results = pd.DataFrame(columns=['track_id', 'key', 'mode', 'scale_name', 'key_full', 'key_correlation', 'scale_correlation', 'scale_pitches'])
+    
+    # Initialize track processing statistics
+    processed_tracks = 0
+    failed_tracks = 0
+    skipped_tracks = 0
+    
+    # Define the track IDs based on the MP3 files in the directory
     if hasattr(args, 'track_ids') and args.track_ids:
+        # If track IDs are specified via command line, use those
         track_ids = [int(id.strip()) for id in args.track_ids.split(',')]
     else:
-        track_ids = [2, 3, 4, 5, 7, 8, 10, 12, 13, 2000]
+        # Otherwise, automatically detect all MP3 files in the directory
+        print("Rilevamento automatico di tutti i file MP3 nella directory...")
+        # Verify that the audio directory exists
+        if not os.path.exists(paths['audio_dir']):
+            print(f"ERRORE: La directory audio {paths['audio_dir']} non esiste.")
+            return None
+            
+        mp3_files = [f for f in os.listdir(paths['audio_dir']) if f.endswith('.mp3')]
+        
+        # Extract track IDs from filenames (removing the .mp3 extension)
+        track_ids = [int(os.path.splitext(f)[0]) for f in mp3_files]
+        track_ids.sort()  # Sort track IDs for organized processing
+        
+        print(f"Trovati {len(track_ids)} file audio da elaborare.")
     
     # Create DataFrames to store the results
     basic_results = pd.DataFrame(columns=['track_id', 'rms', 'spectral', 'rolloff', 'Chromatic scale', 'Predominant Key', 'MFCC'])
     tonality_results = pd.DataFrame(columns=['track_id', 'key', 'mode', 'scale_name', 'key_full', 'key_correlation', 'scale_correlation', 'scale_pitches'])
     
-    # Audio folder path
-    audio_folder = paths['audio_dir']
-    
-    # Check if the folder exists
-    if not os.path.exists(audio_folder):
-        print(f"La cartella audio {audio_folder} non esiste. Verifica il percorso.")
-        return
-    
     # Process each track
     for track_id in track_ids:
         # Find the audio file for this track ID
-        audio_file = os.path.join(audio_folder, f"{track_id}.mp3")
+        audio_file = os.path.join(paths['audio_dir'], f"{track_id}.mp3")
         
         if os.path.exists(audio_file):
             print(f"Elaborazione traccia {track_id}...")
@@ -367,27 +381,68 @@ def main(args=None):
                 })
                 tonality_results = pd.concat([tonality_results, tonality_row], ignore_index=True)
                 
+                processed_tracks += 1
                 print(f"Elaborazione completata per la traccia {track_id}")
+                
+                # Save intermediate results every 50 tracks to prevent data loss
+                if processed_tracks % 50 == 0:
+                    intermediate_file = os.path.join(paths['output_dir'], 'audio_features_intermediate.csv')
+                    pd.merge(basic_results, tonality_results, on='track_id', how='outer').to_csv(intermediate_file, index=False)
+                    print(f"Salvataggio intermedio effettuato dopo {processed_tracks} tracce elaborate.")
             else:
+                failed_tracks += 1
                 print(f"Impossibile estrarre le caratteristiche per la traccia {track_id}")
         else:
+            skipped_tracks += 1
             print(f"File audio per la traccia {track_id} non trovato in {audio_file}")
     
-    # Display the results
-    print("\nCaratteristiche audio di base estratte:")
-    print(basic_results)
+    # Calculate total tracks processed
+    total_tracks = len(track_ids) if 'track_ids' in locals() else 0
     
-    print("\nCaratteristiche di tonalità e scala estratte:")
-    print(tonality_results)
+    # Print processing summary
+    print("\nRiepilogo elaborazione:")
+    print(f"Tracce totali: {total_tracks}")
+    print(f"Tracce elaborate con successo: {processed_tracks}")
+    print(f"Tracce fallite: {failed_tracks}")
+    print(f"Tracce saltate (file non trovati): {skipped_tracks}")
     
+    # Display summary of the results
+    print("\nRiepilogo delle caratteristiche estratte:")
+    print(f"Numero di tracce con caratteristiche audio di base: {len(basic_results)}")
+    print(f"Numero di tracce con caratteristiche di tonalità: {len(tonality_results)}")
     
     # Create a merged DataFrame with all features
     all_features = pd.merge(basic_results, tonality_results, on='track_id', how='outer')
+    print(f"Numero totale di tracce nel dataset finale: {len(all_features)}")
+    
+    # Add timestamp to filename to prevent overwriting previous analyses
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # Save to the configured output directory
-    output_file = os.path.join(paths['output_dir'], 'audio_tonality_features_with_emotions.csv')
+    output_file = os.path.join(paths['output_dir'], f'audio_tonality_features_complete_{timestamp}.csv')
     all_features.to_csv(output_file, index=False)
-    print(f"Tutte le caratteristiche sono state unite e salvate in {output_file}")
+    print(f"\nTutte le caratteristiche sono state unite e salvate in:\n{output_file}")
+    
+    # Save a summary report
+    summary_file = os.path.join(paths['output_dir'], f'analysis_summary_{timestamp}.txt')
+    with open(summary_file, 'w') as f:
+        f.write(f"Analisi audio DEAM - Rapporto di elaborazione\n")
+        f.write(f"Data: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        f.write(f"Tracce totali nel database: {total_tracks}\n")
+        f.write(f"Tracce elaborate con successo: {processed_tracks}\n")
+        f.write(f"Tracce fallite: {failed_tracks}\n")
+        f.write(f"Tracce saltate (file non trovati): {skipped_tracks}\n\n")
+        f.write(f"File di output: {output_file}\n")
+        
+        # Add information about audio directory path
+        f.write(f"\nDirectory audio utilizzata: {paths['audio_dir']}\n")
+        if not os.path.exists(paths['audio_dir']):
+            f.write("ATTENZIONE: La directory audio specificata non esiste!\n")
+    
+    print(f"Rapporto di riepilogo salvato in:\n{summary_file}")
+    
+    return all_features  # Return the DataFrame for potential further processing
 
 if __name__ == "__main__":
     main()

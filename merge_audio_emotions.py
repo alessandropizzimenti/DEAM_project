@@ -28,7 +28,7 @@ def get_project_paths(custom_audio_features_path=None, custom_annotations_dir=No
     if custom_audio_features_path:
         audio_features_path = Path(custom_audio_features_path)
     else:
-        audio_features_path = base_dir / 'audio_tonality_features.csv'
+        audio_features_path = base_dir / 'audio_tonality_features_complete_20250404_133542.csv'
     
     # Directory delle annotazioni
     if custom_annotations_dir:
