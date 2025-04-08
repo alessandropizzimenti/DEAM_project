@@ -61,9 +61,32 @@ def prepare_data(df, target_col, test_size=0.2, random_state=42):
     if target_col not in df.columns:
         raise ValueError(f"La colonna {target_col} non è presente nel dataset")
     
+    # Crea una copia del dataframe per evitare warning di SettingWithCopyWarning
+    df = df.copy()
+    
+    # Verifica e gestione dei valori mancanti
+    if df.isnull().any().any():
+        print("\nRilevati valori mancanti nel dataset. Gestione in corso...")
+        # Mostra le colonne con valori mancanti e il conteggio
+        null_counts = df.isnull().sum()
+        print("Colonne con valori mancanti:")
+        print(null_counts[null_counts > 0])
+        
+        # Imputa i valori mancanti con la media per le colonne numeriche
+        for col in df.select_dtypes(include=['float64', 'int64']).columns:
+            if df[col].isnull().any():
+                print(f"Imputazione dei valori mancanti nella colonna {col} con la media")
+                df[col] = df[col].fillna(df[col].mean())
+        
+        # Per le colonne categoriche, imputa con il valore più frequente
+        for col in df.select_dtypes(include=['object', 'category']).columns:
+            if df[col].isnull().any():
+                print(f"Imputazione dei valori mancanti nella colonna {col} con il valore più frequente")
+                df[col] = df[col].fillna(df[col].mode()[0])
+    
     # Seleziona le feature numeriche rilevanti basate sull'analisi delle correlazioni
     # Escludiamo track_id e le colonne target
-    exclude_cols = ['track_id', ' arousal_mean', 'arousal_std', ' valence_mean', 'valence_std', 
+    exclude_cols = ['track_id', 'arousal_mean', 'arousal_std', 'valence_mean', 'valence_std', 
                     'Predominant Key', 'key_full', 'scale_pitches']
     
     # Crea una lista di colonne da utilizzare come features
@@ -82,6 +105,16 @@ def prepare_data(df, target_col, test_size=0.2, random_state=42):
     # Prepara X e y
     X = df[feature_cols]
     y = df[target_col]
+    
+    # Verifica finale per NaN dopo la preparazione
+    if X.isnull().any().any() or y.isnull().any():
+        print("\nATTENZIONE: Ci sono ancora valori NaN dopo la preparazione dei dati.")
+        # Rimuovi le righe con valori NaN
+        print("Rimozione delle righe con valori NaN...")
+        mask = ~(X.isnull().any(axis=1) | y.isnull())
+        X = X.loc[mask]
+        y = y.loc[mask]
+        print(f"Dati dopo la rimozione dei NaN: {X.shape[0]} campioni")
     
     # Dividi in train e test set
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
@@ -193,37 +226,37 @@ def optimize_best_model(X_train, y_train, best_model_name, target_name):
     elif best_model_name == 'Ridge Regression':
         model = Ridge()
         param_grid = {
-            'alpha': [0.01, 0.1, 1.0, 10.0, 100.0]
+            'model__alpha': [0.01, 0.1, 1.0, 10.0, 100.0]
         }
     
     elif best_model_name == 'Lasso Regression':
         model = Lasso()
         param_grid = {
-            'alpha': [0.001, 0.01, 0.1, 1.0, 10.0]
+            'model__alpha': [0.001, 0.01, 0.1, 1.0, 10.0]
         }
     
     elif best_model_name == 'Random Forest':
         model = RandomForestRegressor(random_state=42)
         param_grid = {
-            'n_estimators': [50, 100, 200],
-            'max_depth': [None, 10, 20, 30],
-            'min_samples_split': [2, 5, 10]
+            'model__n_estimators': [50, 100, 200],
+            'model__max_depth': [None, 10, 20, 30],
+            'model__min_samples_split': [2, 5, 10]
         }
     
     elif best_model_name == 'Gradient Boosting':
         model = GradientBoostingRegressor(random_state=42)
         param_grid = {
-            'n_estimators': [50, 100, 200],
-            'learning_rate': [0.01, 0.1, 0.2],
-            'max_depth': [3, 5, 7]
+            'model__n_estimators': [50, 100, 200],
+            'model__learning_rate': [0.01, 0.1, 0.2],
+            'model__max_depth': [3, 5, 7]
         }
     
     elif best_model_name == 'SVR':
         model = SVR()
         param_grid = {
-            'C': [0.1, 1, 10, 100],
-            'gamma': ['scale', 'auto', 0.1, 0.01],
-            'kernel': ['linear', 'rbf']
+            'model__C': [0.1, 1, 10, 100],
+            'model__gamma': ['scale', 'auto', 0.1, 0.01],
+            'model__kernel': ['linear', 'rbf']
         }
     
     # Crea una pipeline con scaling e modello
