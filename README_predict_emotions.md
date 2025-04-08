@@ -1,102 +1,98 @@
-# 🎵 Predizione delle Emozioni Musicali 🎵
+# 📊 Guida a predict_emotions.py
 
-## 📝 Descrizione
+## 📋 Panoramica
 
-Questo documento spiega il funzionamento dello script `predict_emotions.py`, un programma che crea modelli predittivi per determinare le emozioni suscitate da brani musicali, basandosi su caratteristiche audio estratte. Il programma analizza due dimensioni emozionali fondamentali:
+Il file `predict_emotions.py` è uno script Python progettato per sviluppare modelli predittivi che analizzano le caratteristiche audio di brani musicali e predicono le emozioni associate, utilizzando due dimensioni emozionali fondamentali:
 
-- **Arousal (Eccitazione)**: Indica il livello di energia o intensità emotiva del brano (da calmo a energico)
-- **Valence (Positività)**: Indica la qualità emotiva del brano (da negativo/triste a positivo/felice)
+- **Arousal (Eccitazione)**: Rappresenta il livello di energia o intensità emotiva del brano (da calmo a energico)
+- **Valence (Positività)**: Rappresenta la positività o negatività dell'emozione trasmessa dal brano (da triste a felice)
 
-## 🧠 Funzionamento del Programma
+## 🧠 Funzionalità principali
 
-Lo script esegue le seguenti operazioni principali:
+Lo script esegue le seguenti operazioni:
 
-### 1. Caricamento e Preparazione dei Dati
+1. **Caricamento dei dati**: Importa un dataset contenente caratteristiche audio e annotazioni emozionali
+2. **Preparazione dei dati**: Pulisce, trasforma e divide i dati in set di training e test
+3. **Addestramento di modelli**: Valuta diversi algoritmi di machine learning per trovare il migliore
+4. **Ottimizzazione**: Perfeziona gli iperparametri del modello migliore
+5. **Analisi delle feature**: Identifica quali caratteristiche audio influenzano maggiormente le emozioni
+6. **Salvataggio dei modelli**: Conserva i modelli ottimizzati per utilizzi futuri
 
-- Carica un dataset (`audio_tonality_features_with_emotions.csv`) contenente caratteristiche audio estratte e annotazioni emozionali
-- Prepara i dati per l'addestramento, gestendo le colonne categoriche con one-hot encoding
-- Divide i dati in set di training (80%) e test (20%)
+## 🔍 Struttura del codice
 
-### 2. Addestramento e Valutazione dei Modelli
+Lo script è organizzato in diverse funzioni specializzate:
 
-Il programma addestra e valuta sei diversi modelli di regressione:
+### `load_data(file_path)`
+Carica il dataset da un file CSV e mostra informazioni sulla sua struttura.
 
-- **Regressione Lineare**: Modello base che cerca relazioni lineari tra le caratteristiche audio e le emozioni
-- **Ridge Regression**: Versione regolarizzata della regressione lineare che aiuta a prevenire l'overfitting
-- **Lasso Regression**: Altra versione regolarizzata che può selezionare automaticamente le feature più importanti
-- **Random Forest**: Modello basato su alberi decisionali multipli, efficace per catturare relazioni non lineari
-- **Gradient Boosting**: Modello avanzato che costruisce alberi in sequenza, correggendo gli errori dei precedenti
-- **SVR (Support Vector Regression)**: Modello che cerca di trovare un iperpiano ottimale per la predizione
+### `prepare_data(df, target_col, test_size=0.2, random_state=42)`
+Prepara i dati per l'addestramento:
+- Gestisce i valori mancanti
+- Converte le variabili categoriche
+- Divide i dati in set di training e test
 
-Per ogni modello, vengono calcolate diverse metriche di performance:
-- R² (coefficiente di determinazione): Indica quanto bene il modello spiega la variabilità dei dati
-- RMSE (Root Mean Square Error): Misura l'errore medio di predizione
-- MAE (Mean Absolute Error): Misura l'errore assoluto medio
+### `train_and_evaluate_models(X_train, X_test, y_train, y_test, target_name)`
+Addestra e valuta sei diversi modelli di regressione:
+1. **Regressione Lineare**: Modello base che cerca relazioni lineari tra feature e target
+2. **Ridge Regression**: Regressione con regolarizzazione L2 per ridurre l'overfitting
+3. **Lasso Regression**: Regressione con regolarizzazione L1 per selezionare feature
+4. **Random Forest**: Ensemble di alberi decisionali per catturare relazioni non lineari
+5. **Gradient Boosting**: Tecnica avanzata che costruisce modelli in sequenza
+6. **SVR (Support Vector Regression)**: Algoritmo che trova un iperpiano ottimale
 
-### 3. Ottimizzazione del Miglior Modello
+### `optimize_best_model(X_train, y_train, best_model_name, target_name)`
+Ottimizza gli iperparametri del modello migliore utilizzando GridSearchCV.
 
-- Identifica il modello con la migliore performance (R² più alto sul test set)
-- Ottimizza gli iperparametri del modello selezionato utilizzando GridSearchCV con validazione incrociata
-- Valuta nuovamente il modello ottimizzato sul test set
+### `analyze_feature_importance(model, feature_names, target_name)`
+Analizza e visualizza quali caratteristiche audio hanno maggiore influenza sulle emozioni.
 
-### 4. Analisi dell'Importanza delle Feature
+### `save_model(model, scaler, feature_names, target_name, output_dir='models')`
+Salva il modello ottimizzato, lo scaler e i nomi delle feature per utilizzi futuri.
 
-- Analizza quali caratteristiche audio hanno maggiore influenza sulla predizione delle emozioni
-- Genera grafici che mostrano l'importanza relativa delle feature o i coefficienti dei modelli
-- Salva i grafici come immagini (`coefficients_arousal.png` e `coefficients_valence.png`)
+### `main()`
+Funzione principale che coordina l'intero processo di addestramento e valutazione.
 
-### 5. Salvataggio dei Modelli
+## 📈 Metriche di valutazione
 
-- Salva i modelli ottimizzati, gli scaler per la standardizzazione e i nomi delle feature
-- I file vengono salvati nella directory `emotion_prediction_results`
-- I modelli salvati possono essere utilizzati successivamente per predire le emozioni di nuovi brani musicali
+I modelli vengono valutati utilizzando diverse metriche:
 
-## 📊 Metriche e Valutazione
+- **R²**: Indica quanto bene il modello spiega la varianza nei dati (più vicino a 1 è migliore)
+- **RMSE (Root Mean Squared Error)**: Misura l'errore medio di predizione
+- **MAE (Mean Absolute Error)**: Misura l'errore assoluto medio
 
-Il programma utilizza diverse metriche per valutare la qualità dei modelli:
+## 🔧 Come utilizzare lo script
 
-- **R²**: Varia da 0 a 1, dove 1 indica una predizione perfetta. Valori più alti sono migliori.
-- **RMSE**: Misura l'errore di predizione. Valori più bassi sono migliori.
-- **MAE**: Misura l'errore assoluto medio. Valori più bassi sono migliori.
-
-## 🔧 Utilizzo
-
-Per utilizzare questo script:
-
-1. Assicurati di avere il file `audio_tonality_features_with_emotions.csv` nella stessa directory dello script
-2. Esegui lo script con Python: `python predict_emotions.py`
-3. Lo script mostrerà i risultati dell'addestramento e della valutazione dei modelli
+1. Assicurati di avere tutte le dipendenze installate (vedi `requirements.txt`)
+2. Verifica che il file `audio_tonality_features_with_emotions.csv` sia presente nella directory
+3. Esegui lo script con il comando:
+   ```
+   python predict_emotions.py
+   ```
 4. I modelli ottimizzati verranno salvati nella directory `emotion_prediction_results`
-5. Per predire le emozioni di nuovi brani musicali, utilizza lo script `predict_new_audio.py`
+5. Verranno generate visualizzazioni delle feature più importanti
 
-## 📚 Requisiti
+## 🔄 Integrazione con predict_new_audio.py
 
-Lo script richiede le seguenti librerie Python:
+Dopo aver addestrato i modelli con `predict_emotions.py`, puoi utilizzare `predict_new_audio.py` per predire le emozioni di nuovi brani musicali non presenti nel dataset originale.
 
-- pandas e numpy: Per la manipolazione dei dati
-- matplotlib e seaborn: Per la visualizzazione
-- scikit-learn: Per i modelli di machine learning
-- joblib: Per salvare e caricare i modelli
+## 📊 Output
 
-## 🔍 Note Tecniche
+Lo script genera:
 
-- Il programma utilizza la standardizzazione (StandardScaler) per normalizzare le feature numeriche
-- Le feature categoriche vengono codificate con one-hot encoding
-- La ricerca degli iperparametri utilizza la validazione incrociata a 5 fold
-- I modelli vengono ottimizzati per massimizzare il punteggio R²
+1. **Modelli salvati**: File `.pkl` contenenti i modelli ottimizzati
+2. **Visualizzazioni**: Grafici che mostrano l'importanza delle feature per arousal e valence
+3. **Report di performance**: Statistiche dettagliate sulla performance dei modelli
 
-## 🔄 Integrazione con Altri Script
+## 🔬 Note tecniche
 
-Questo script fa parte di un flusso di lavoro più ampio:
+- Lo script utilizza la standardizzazione delle feature per migliorare la performance dei modelli
+- Viene applicato l'encoding one-hot per le variabili categoriche
+- La cross-validation viene utilizzata durante l'ottimizzazione degli iperparametri
+- I modelli vengono salvati utilizzando la libreria `joblib`
 
-1. Estrazione delle caratteristiche audio con `extract_audio_features_complete.py`
-2. Addestramento dei modelli con `predict_emotions.py` (questo script)
-3. Predizione delle emozioni per nuovi brani con `predict_new_audio.py`
+## 🚀 Possibili miglioramenti
 
-## 🎯 Risultati
-
-Al termine dell'esecuzione, lo script fornisce:
-
-- I migliori modelli per arousal e valence con i relativi punteggi R²
-- Grafici che mostrano le feature più importanti per la predizione
-- Modelli salvati pronti per essere utilizzati su nuovi brani musicali
+- Implementare tecniche di feature engineering più avanzate
+- Testare architetture di deep learning
+- Aggiungere validazione incrociata più robusta
+- Implementare tecniche di ensemble di modelli diversi
