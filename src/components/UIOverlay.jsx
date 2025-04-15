@@ -98,9 +98,11 @@ function UIOverlay({ appState, analysisData, error, onFileSelect, onAnalyzeAnoth
       width: '100%',
       height: '100%',
       display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'flex-end', // Modificato da 'center' a 'flex-end'
-      paddingBottom: '5vh', // Aggiunto padding inferiore (5% dell'altezza viewport)
+      // *** Spostiamo in basso a sinistra ***
+      justifyContent: 'flex-start', // Allinea a sinistra
+      alignItems: 'flex-end',    // Allinea in basso
+      paddingBottom: '30px',      // Padding dal basso
+      paddingLeft: '30px',       // Padding da sinistra
       zIndex: 10, // Assicura che sia sopra la scena 3D
       pointerEvents: 'none', // Permette click/drag sulla scena 3D sottostante
       fontFamily: 'Inter, sans-serif', // Assicuriamoci un font moderno
@@ -126,13 +128,13 @@ function UIOverlay({ appState, analysisData, error, onFileSelect, onAnalyzeAnoth
         background: 'rgba(26, 26, 46, 0.65)', // Riduciamo un po' l'opacità per far vedere meglio il blur
         backdropFilter: 'blur(10px)', // Effetto vetro smerigliato
         WebkitBackdropFilter: 'blur(10px)', // Per compatibilità Safari
-        padding: '30px',
-        borderRadius: '20px', // Angoli più arrotondati
+        padding: '20px', // *** Riduciamo un po' il padding interno ***
+        borderRadius: '15px', // Angoli leggermente meno arrotondati
         color: 'white',
         textAlign: 'center',
-        maxWidth: '500px',
+        maxWidth: '350px', // *** Riduciamo la larghezza massima ***
         pointerEvents: 'auto', // Riabilita eventi per questo pannello
-        boxShadow: '0 0 20px rgba(100, 108, 255, 0.3)', // Leggero glow
+        boxShadow: '0 0 15px rgba(100, 108, 255, 0.2)', // Glow più leggero
       }}>
         {/* Renderizza il componente corretto in base allo stato */}
         {appState === 'idle' && <UploadModulePlaceholder onFileSelect={onFileSelect} />}

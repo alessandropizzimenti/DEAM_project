@@ -1,28 +1,27 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import gsap from 'gsap'; // Importiamo GSAP
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'; // RIMOSSO
+import gsap from 'gsap';
 
-// Definiamo le posizioni iniziali fuori dal componente per chiarezza
-const initialCameraPos = new THREE.Vector3(0, 10, 30);
+const sphereRadius = 20;
+const initialCameraPos = new THREE.Vector3(0, 0, sphereRadius * 2.5);
 const initialTargetPos = new THREE.Vector3(0, 0, 0);
 
 function SceneContainer({ visualizerHints, appState }) {
   const mountRef = useRef(null);
-  const controlsRef = useRef();
-  const isZoomingRef = useRef(false); // Usiamo ref per evitare re-render non necessari
+  // const controlsRef = useRef(); // RIMOSSO
+  const isZoomingRef = useRef(false);
+  const orbitAngleRef = useRef(0);
 
-  // Refs per gli oggetti Three.js
   const sceneRef = useRef();
   const cameraRef = useRef();
   const rendererRef = useRef();
   const starsRef = useRef();
   const planetRef = useRef();
+  const axesRef = useRef();
 
-  // Effetto per inizializzare la scena Three.js (solo al mount)
   useEffect(() => {
     const currentMount = mountRef.current;
-    // --- Setup Base Three.js ---
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
@@ -34,66 +33,110 @@ function SceneContainer({ visualizerHints, appState }) {
     renderer.setPixelRatio(window.devicePixelRatio);
     currentMount.appendChild(renderer.domElement);
 
-    // --- Controlli Orbit ---
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 2;
-    controls.maxDistance = 50;
-    controls.target.copy(initialTargetPos);
-    controlsRef.current = controls;
+    // --- OrbitControls RIMOSSE ---
+    // const controls = new OrbitControls(camera, renderer.domElement);
+    // ... configurazione controlli rimossa ...
+    // controlsRef.current = controls;
 
-    // --- Mappa Stellare ---
-    const starVertices = [];
-    const numStars = 5000;
-    for (let i = 0; i < numStars; i++) {
-      // Riduciamo la dispersione per aumentare il parallasse
-      const x = THREE.MathUtils.randFloatSpread(80);
-      const y = THREE.MathUtils.randFloatSpread(80);
-      const z = THREE.MathUtils.randFloatSpread(80);
-      starVertices.push(x, y, z);
+    // --- Mappa Emozionale, Assi, Pianeta, Luci (come prima) ---
+    const emotionPointsVertices = [];
+    const numPoints = 5000;
+    for (let i = 0; i < numPoints; i++) {
+        const u = Math.random(); const v = Math.random();
+        const theta = 2 * Math.PI * u; const phi = Math.acos(2 * v - 1);
+        const r = Math.cbrt(Math.random()) * sphereRadius;
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.sin(phi) * Math.sin(theta);
+        const z = r * Math.cos(phi);
+        emotionPointsVertices.push(x, y, z);
     }
-    const starGeometry = new THREE.BufferGeometry();
-    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1, sizeAttenuation: true });
-    const stars = new THREE.Points(starGeometry, starMaterial);
-    starsRef.current = stars;
-    scene.add(stars);
-
-    // --- Pianeta (nascosto all'inizio) ---
-    const planetGeometry = new THREE.SphereGeometry(1.5, 32, 32);
-    const planetMaterial = new THREE.MeshStandardMaterial({ color: 0x6a0dad, roughness: 0.8, metalness: 0.1, visible: false });
+    const pointsGeometry = new THREE.BufferGeometry();
+    pointsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(emotionPointsVertices, 3));
+    const pointTextureCanvas = document.createElement('canvas');
+    pointTextureCanvas.width = 16; pointTextureCanvas.height = 16;
+    const context = pointTextureCanvas.getContext('2d');
+    context.beginPath(); context.arc(8, 8, 7, 0, 2 * Math.PI);
+    context.fillStyle = '#ffffff'; context.fill();
+    const pointTexture = new THREE.CanvasTexture(pointTextureCanvas);
+    const pointsMaterial = new THREE.PointsMaterial({
+        size: 0.15, sizeAttenuation: true, map: pointTexture,
+        transparent: true, alphaTest: 0.5,
+    });
+    const emotionPoints = new THREE.Points(pointsGeometry, pointsMaterial);
+    starsRef.current = emotionPoints;
+    scene.add(emotionPoints);
+    const axesMaterial = new THREE.LineBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.5 });
+    const axisLength = sphereRadius * 1.1;
+    const pointsX = [new THREE.Vector3(-axisLength, 0, 0), new THREE.Vector3(axisLength, 0, 0)];
+    const geometryX = new THREE.BufferGeometry().setFromPoints(pointsX);
+    const xAxis = new THREE.Line(geometryX, axesMaterial);
+    const pointsY = [new THREE.Vector3(0, -axisLength, 0), new THREE.Vector3(0, axisLength, 0)];
+    const geometryY = new THREE.BufferGeometry().setFromPoints(pointsY);
+    const yAxis = new THREE.Line(geometryY, axesMaterial);
+    const pointsZ = [new THREE.Vector3(0, 0, -axisLength), new THREE.Vector3(0, 0, axisLength)];
+    const geometryZ = new THREE.BufferGeometry().setFromPoints(pointsZ);
+    const zAxis = new THREE.Line(geometryZ, axesMaterial);
+    const axesGroup = new THREE.Group();
+    axesGroup.add(xAxis); axesGroup.add(yAxis); axesGroup.add(zAxis);
+    axesRef.current = axesGroup;
+    scene.add(axesGroup);
+    const planetGeometry = new THREE.SphereGeometry(0.075, 16, 16);
+    const planetMaterial = new THREE.MeshStandardMaterial({
+        color: 0x6a0dad, roughness: 0.5, metalness: 0.1, visible: false,
+        emissive: 0x6a0dad, emissiveIntensity: 0.5
+    });
     const planet = new THREE.Mesh(planetGeometry, planetMaterial);
     planetRef.current = planet;
     scene.add(planet);
-
-    // --- Luci ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xffffff, 1);
-    pointLight.position.set(5, 5, 5);
+    const pointLight = new THREE.PointLight(0xffffff, 0.8);
+    pointLight.position.set(5, 5, 10);
     scene.add(pointLight);
 
     camera.position.copy(initialCameraPos);
     camera.lookAt(initialTargetPos);
 
-    // --- Loop di Animazione ---
     let animationFrameId;
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      controls.update();
+      // const controls = controlsRef.current; // RIMOSSO
+      const planet = planetRef.current;
+      const cam = cameraRef.current;
+      const points = starsRef.current; // Riferimento ai punti/stelle
 
-      // Rotazione pianeta (solo se visibile e non in zoom)
-      if (planetRef.current?.material.visible && !isZoomingRef.current) {
-        planetRef.current.rotation.y += 0.002;
+      if (!cam || !planet || !points) return; // Aggiunto check per points
+
+      const shouldOrbit = appState === 'results_shown' && !isZoomingRef.current && planet.material.visible;
+
+      if (shouldOrbit) {
+        // *** Orbita MANUALE ***
+        orbitAngleRef.current += 0.003;
+        const orbitRadius = 0.5;
+        const planetPos = planet.position;
+        const camX = planetPos.x + orbitRadius * Math.cos(orbitAngleRef.current);
+        const camZ = planetPos.z + orbitRadius * Math.sin(orbitAngleRef.current);
+        const camY = planetPos.y;
+        cam.position.set(camX, camY, camZ);
+        cam.lookAt(planetPos);
+      } else if (appState === 'idle' && !isZoomingRef.current) {
+          // *** Rotazione AUTOMATICA della mappa iniziale ***
+          points.rotation.y += 0.0005; // Ruota lentamente la nuvola di punti
+          axesRef.current.rotation.y += 0.0005; // Ruota anche gli assi
+          // La camera rimane ferma, ma la scena ruota
       }
 
-      renderer.render(scene, camera);
+      // Rotazione pianeta (indipendente)
+      if (planet.material.visible && !isZoomingRef.current) {
+        planet.rotation.y += 0.002;
+      }
+
+      // controls?.update(); // RIMOSSO
+
+      renderer.render(scene, cam);
     };
     animate();
 
-    // --- Gestione Resize ---
     const handleResize = () => {
       if (!cameraRef.current || !rendererRef.current || !currentMount) return;
       cameraRef.current.aspect = currentMount.clientWidth / currentMount.clientHeight;
@@ -102,119 +145,91 @@ function SceneContainer({ visualizerHints, appState }) {
     };
     window.addEventListener('resize', handleResize);
 
-    // --- Pulizia ---
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
       if (currentMount && rendererRef.current?.domElement.parentNode === currentMount) {
         currentMount.removeChild(rendererRef.current.domElement);
       }
-      controls.dispose();
-      // TODO: Pulire geometrie, materiali se necessario
+      // controls.dispose(); // RIMOSSO
     };
-  }, []); // Esegui solo al mount
+  }, []);
 
   // --- Effetto per gestire lo zoom e la visibilità con GSAP ---
   useEffect(() => {
     const camera = cameraRef.current;
-    const controls = controlsRef.current;
+    // const controls = controlsRef.current; // RIMOSSO
     const planet = planetRef.current;
-    const stars = starsRef.current;
+    const emotionPoints = starsRef.current;
+    const axes = axesRef.current;
 
-    if (!camera || !controls || !planet || !stars) return; // Assicura che tutto sia inizializzato
+    // Rimosso 'controls' dal check
+    if (!camera || !planet || !emotionPoints || !axes) return;
 
     const targetPosRaw = visualizerHints?.targetPosition;
-    const targetPosition = targetPosRaw ? new THREE.Vector3(targetPosRaw.x, targetPosRaw.y, targetPosRaw.z) : null;
+    const targetPosition = targetPosRaw ? new THREE.Vector3(targetPosRaw.x, targetPosRaw.y, 0) : null;
 
     // --- Animazione Zoom IN ---
-    // Trigger quando arrivano i risultati E il pianeta è nascosto (veniamo dalla mappa)
     if (appState === 'results_shown' && targetPosition && !planet.material.visible && !isZoomingRef.current) {
-      console.log("Avvio Zoom IN verso:", targetPosition);
-      const targetCameraPosition = targetPosition.clone().add(new THREE.Vector3(0, 2, 5));
-
+      const targetCameraPosition = targetPosition.clone().add(new THREE.Vector3(0, 0, 0.5));
       isZoomingRef.current = true;
-      planet.position.copy(targetPosition); // Posiziona subito il pianeta
+      planet.position.copy(targetPosition);
 
       gsap.to(camera.position, {
-        x: targetCameraPosition.x,
-        y: targetCameraPosition.y,
-        z: targetCameraPosition.z,
-        duration: 2.5, // Durata animazione
-        ease: 'power2.inOut',
+        x: targetCameraPosition.x, y: targetCameraPosition.y, z: targetCameraPosition.z,
+        duration: 2.5, ease: 'power2.inOut',
         onStart: () => {
-          // stars.material.visible = false; // NON nascondere più le stelle
-          planet.material.visible = true; // Mostra il pianeta all'inizio dello zoom
+          planet.material.visible = true;
+          axes.visible = false;
+        },
+        onUpdate: () => { // *** Aggiunto onUpdate per lookAt ***
+            if (camera && targetPosition) {
+                camera.lookAt(targetPosition);
+            }
         },
         onComplete: () => {
-          // planet.material.visible = true; // Spostato in onStart
           isZoomingRef.current = false;
-          // Aggiorna subito il colore dopo lo zoom
+          // Resetta l'angolo orbita
+          orbitAngleRef.current = Math.atan2(camera.position.z - planet.position.z, camera.position.x - planet.position.x);
           if (visualizerHints) {
              gsap.to(planet.material.color, {
                r: new THREE.Color().setHSL(visualizerHints.colorHue / 360, 1.0, 0.5).r,
                g: new THREE.Color().setHSL(visualizerHints.colorHue / 360, 1.0, 0.5).g,
                b: new THREE.Color().setHSL(visualizerHints.colorHue / 360, 1.0, 0.5).b,
-               duration: 0.5 // Cambio colore più rapido dopo zoom
+               duration: 0.5
              });
           }
         }
       });
 
-      gsap.to(controls.target, {
-        x: targetPosition.x,
-        y: targetPosition.y,
-        z: targetPosition.z,
-        duration: 2.5,
-        ease: 'power2.inOut',
-      });
+      // Rimosso tween di controls.target
+      // gsap.to(controls.target, { ... });
 
     // --- Animazione Zoom OUT ---
-    // Trigger quando torniamo a IDLE E il pianeta era visibile
     } else if (appState === 'idle' && planet.material.visible && !isZoomingRef.current) {
-        console.log("Avvio Zoom OUT");
         isZoomingRef.current = true;
 
         gsap.to(camera.position, {
-            x: initialCameraPos.x,
-            y: initialCameraPos.y,
-            z: initialCameraPos.z,
-            duration: 2.0,
-            ease: 'power2.inOut',
-            onStart: () => {
-                planet.material.visible = false; // Nasconde il pianeta all'inizio
+            x: initialCameraPos.x, y: initialCameraPos.y, z: initialCameraPos.z,
+            duration: 2.0, ease: 'power2.inOut',
+            onStart: () => { planet.material.visible = false; },
+            onUpdate: () => { // *** Aggiunto onUpdate per lookAt ***
+                if (camera) {
+                    camera.lookAt(initialTargetPos);
+                }
             },
             onComplete: () => {
-                // stars.material.visible = true; // NON mostrare più le stelle (sono sempre visibili)
+                axes.visible = true;
+                emotionPoints.visible = true;
                 isZoomingRef.current = false;
             }
         });
 
-        gsap.to(controls.target, {
-            x: initialTargetPos.x,
-            y: initialTargetPos.y,
-            z: initialTargetPos.z,
-            duration: 2.0,
-            ease: 'power2.inOut',
-        });
+        // Rimosso tween di controls.target
+        // gsap.to(controls.target, { ... });
     }
 
-    // --- Aggiornamento Pianeta (colore) ---
-    // Questo ora viene fatto onComplete dello zoom IN, ma potremmo lasciarlo
-    // anche qui per aggiornamenti futuri se i visualizerHints cambiassero
-    // senza cambiare appState (improbabile con la logica attuale).
-    // Per sicurezza, lo commentiamo per ora per evitare doppie animazioni colore.
-    /*
-    if (appState === 'results_shown' && visualizerHints && planet.material.visible && !isZoomingRef.current) {
-       gsap.to(planet.material.color, {
-         r: new THREE.Color().setHSL(visualizerHints.colorHue / 360, 1.0, 0.5).r,
-         g: new THREE.Color().setHSL(visualizerHints.colorHue / 360, 1.0, 0.5).g,
-         b: new THREE.Color().setHSL(visualizerHints.colorHue / 360, 1.0, 0.5).b,
-         duration: 1.0
-       });
-    }
-    */
-
-  }, [appState, visualizerHints]); // Dipendenze dell'effetto
+  }, [appState, visualizerHints]);
 
   return (
     <div

@@ -32,12 +32,19 @@ function App() {
       const valence = Math.random(); // Valore 0-1
       const arousal = Math.random(); // Valore 0-1
 
-      // Calcoliamo una posizione target nella mappa basata su valence/arousal
-      // Mappiamo valence su X (-40 a +40) e arousal su Z (-40 a +40), Y=0
-      // (Assumendo che le stelle siano distribuite in un cubo di 100, usiamo un range leggermente minore)
-      const targetX = (valence * 80) - 40;
-      const targetZ = (arousal * 80) - 40;
-      const targetPosition = { x: targetX, y: 0, z: targetZ }; // Oggetto semplice per ora
+      // Calcoliamo una posizione target nella mappa EMOZIONALE 3D (Sfera)
+      const sphereRadius = 20; // Deve corrispondere a quello in SceneContainer
+      // Mappiamo Valence e Arousal su angoli sferici (theta, phi)
+      // e usiamo un valore casuale per il raggio interno alla sfera
+      const targetTheta = valence * Math.PI * 2; // Valence -> Angolo azimutale (0 a 2PI)
+      const targetPhi = Math.acos(arousal * 2 - 1); // Arousal -> Angolo polare (0 a PI)
+      const targetRadius = Math.random() * sphereRadius * 0.8; // Posizione casuale *dentro* la sfera (non solo sulla superficie)
+
+      // Convertiamo coordinate sferiche in cartesiane
+      const targetX = targetRadius * Math.sin(targetPhi) * Math.cos(targetTheta);
+      const targetY = targetRadius * Math.sin(targetPhi) * Math.sin(targetTheta);
+      const targetZ = targetRadius * Math.cos(targetPhi);
+      const targetPosition = { x: targetX, y: targetY, z: targetZ };
 
       const mockData = {
         fileName: file.name,
