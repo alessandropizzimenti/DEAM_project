@@ -1,0 +1,104 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: rgba(255, 255, 255, 0.87); /* Testo chiaro */
+  /* background-color: #1a1a2e; <- Rimosso per sfondo dinamico */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Applichiamo lo sfondo stellato al body */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  /* overflow: hidden; <- Rimosso per abilitare lo scroll */
+  background: #000; /* Sfondo nero base per le stelle */
+  position: relative; /* Necessario per posizionare gli pseudo-elementi */
+}
+
+/* Funzione SASS-like per generare N box-shadow casuali */
+/* Purtroppo CSS puro non ha loop, quindi le generiamo manualmente o con JS/preprocessor.
+   Qui ne mettiamo alcune manualmente per dimostrazione.
+   Per un effetto migliore, ne servirebbero molte di più, magari generate con JS o un tool. */
+@function multiple-box-shadow ($n) {
+  $value: '#{random(2000)}px #{random(2000)}px #FFF';
+  @for $i from 2 through $n {
+    $value: '#{$value} , #{random(2000)}px #{random(2000)}px #FFF';
+  }
+  @return unquote($value);
+}
+
+/* Creiamo diversi strati di stelle con diverse dimensioni e animazioni */
+@keyframes moveStars {
+  from {transform: translateY(0px);}
+  to   {transform: translateY(-2000px);} /* Fa scorrere le stelle verso l'alto */
+}
+
+body::before, body::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 1px; height: 1px; /* Stelle piccole */
+  background: transparent;
+  box-shadow: multiple-box-shadow(700); /* Genera 700 stelle - richiede SASS o JS */
+  /* Fallback manuale con poche stelle: */
+  /* box-shadow: 50px 100px #FFF, 300px 400px #FFF, 800px 150px #FFF, 1200px 900px #FFF, 1500px 200px #FFF, 400px 1800px #FFF, 900px 1400px #FFF, 1800px 1100px #FFF; */
+  animation: moveStars 200s linear infinite;
+  z-index: -1; /* Dietro tutto il resto */
+}
+
+body::after {
+  width: 2px; height: 2px; /* Stelle leggermente più grandi */
+  box-shadow: multiple-box-shadow(200); /* 200 stelle più grandi - richiede SASS o JS */
+   /* Fallback manuale: */
+  /* box-shadow: 200px 600px #FFF, 1000px 300px #FFF, 1600px 1000px #FFF, 700px 1500px #FFF; */
+  animation-duration: 150s; /* Si muovono a velocità diversa */
+  animation-delay: -10s; /* Partono leggermente sfalsate */
+}
+
+/* Stili base per bottoni */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #2a2a3e; /* Colore bottone leggermente diverso */
+  color: rgba(255, 255, 255, 0.87);
+  cursor: pointer;
+  transition: border-color 0.25s, background-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+  background-color: #3a3a4e;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Manteniamo gli stili per la modalità scura se il sistema la preferisce */
+/* Potremmo rimuoverli se vogliamo forzare il tema scuro */
+@media (prefers-color-scheme: light) {
+  /* :root {
+    color: #213547;
+    background-color: #ffffff;
+  } */
+  /* Forziamo il tema scuro per coerenza cosmica */
+  button {
+     /* Manteniamo lo stile scuro anche in light mode */
+    background-color: #2a2a3e;
+    color: rgba(255, 255, 255, 0.87);
+  }
+   button:hover {
+    border-color: #646cff;
+    background-color: #3a3a4e;
+  }
+}

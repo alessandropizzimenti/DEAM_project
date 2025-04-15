@@ -1,0 +1,41 @@
+/* Stili per il loader cosmico */
+.cosmic-loader {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  /* Sfumatura per l'anello esterno */
+  border-top-color: #646cff;
+  border-right-color: #a0a4ff; /* Colore leggermente diverso */
+  animation: spin 1.5s linear infinite; /* Animazione di rotazione */
+  position: relative; /* Per posizionare l'elemento interno */
+  margin: 0 auto; /* Centra il loader se necessario */
+}
+
+/* Elemento interno per un effetto aggiuntivo (es. pulsazione o punto orbitante) */
+.cosmic-loader div {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-bottom-color: #c8caff; /* Colore diverso per l'anello interno */
+  animation: spinReverse 1s linear infinite; /* Rotazione inversa */
+}
+
+/* Animazione di rotazione */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Animazione di rotazione inversa */
+@keyframes spinReverse {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+/* Aggiungi qui altri stili specifici per App.jsx se necessario */
