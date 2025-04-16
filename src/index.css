@@ -17,9 +17,13 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  /* overflow: hidden; <- Rimosso per abilitare lo scroll */
-  background: #000; /* Sfondo nero base per le stelle */
-  position: relative; /* Necessario per posizionare gli pseudo-elementi */
+  /* overflow: hidden; è già commentato/rimosso, va bene così */
+  background: #000;
+  position: relative;
+  /* Cursore personalizzato a cometa */
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="M 12 2 A 1 1 0 0 0 11 3 L 11 11 L 3 11 A 1 1 0 0 0 2 12 A 1 1 0 0 0 3 13 L 11 13 L 11 21 A 1 1 0 0 0 12 22 A 1 1 0 0 0 13 21 L 13 13 L 21 13 A 1 1 0 0 0 22 12 A 1 1 0 0 0 21 11 L 13 11 L 13 3 A 1 1 0 0 0 12 2 z" fill="white" style="filter:url(%23glow);"/><path d="M 12 5 C 10.3 5 9 6.3 9 8 C 9 9.7 10.3 11 12 11 C 13.7 11 15 9.7 15 8 C 15 6.3 13.7 5 12 5 z M 12 13 C 10.3 13 9 14.3 9 16 C 9 17.7 10.3 19 12 19 C 13.7 19 15 17.7 15 16 C 15 14.3 13.7 13 12 13 z" fill="rgba(255,255,255,0.5)"/></svg>'), auto;
+  /* Fallback semplice */
+  cursor: crosshair;
 }
 
 /* Funzione SASS-like per generare N box-shadow casuali */

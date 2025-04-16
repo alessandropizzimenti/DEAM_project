@@ -1,0 +1,11 @@
+Analisi audio DEAM - Rapporto di elaborazione
+Data: 2025-04-04 13:35:42
+
+Tracce totali nel database: 1802
+Tracce elaborate con successo: 1802
+Tracce fallite: 0
+Tracce saltate (file non trovati): 0
+
+File di output: c:\Users\PC\Desktop\develhope\projects\DEAM_project\audio_tonality_features_complete_20250404_133542.csv
+
+Directory audio utilizzata: c:\Users\PC\Desktop\develhope\projects\DEAM_project\DEAM_audio\MEMD_audio

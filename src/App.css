@@ -38,4 +38,24 @@
   100% { transform: rotate(-360deg); }
 }
 
+/* Stili per l'area di upload quadrata (senza sfondo/bordo animato) */
+.upload-area {
+  position: relative; /* Necessario per posizionare lo pseudo-elemento */
+  border-radius: 10px; /* Angoli leggermente arrotondati */
+  /* background-color: rgba(30, 30, 50, 0.7); <-- Rimosso */
+  overflow: hidden; /* Nasconde il gradiente che sborda */
+  padding: 20px; /* Manteniamo il padding definito inline */
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); /* Ombra interna per profondità */
+  /* transition: background-color 0.3s ease; <-- Rimosso */
+}
+
+/* .upload-area:hover rimosso */
+
+/* Pseudo-elemento per il bordo animato rimosso */
+
+/* Animazione per ruotare il gradiente del bordo rimossa */
+
+
 /* Aggiungi qui altri stili specifici per App.jsx se necessario */
+
+/* Stili per .indeterminate-loader-bar rimossi perché ora usiamo .determinate-loader-bar con stili inline */

@@ -1,114 +1,93 @@
-# <div align="center">✨ HARMONIA ✨</div>
-<div align="center"><img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
-<img src="https://img.shields.io/badge/Three.js-black?style=for-the-badge&logo=three.js&logoColor=white" alt="Three.js" />
-<img src="https://img.shields.io/badge/GSAP-88CE02?style=for-the-badge&logo=greensock&logoColor=white" alt="GSAP" />
-<img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /></div>
+# HARMONIA: Audio-Visual Research Project 🌌🎶
 
-<div align="center">
-  <h3>Visualizza la tua musica nell'universo cosmico interattivo</h3>
-  <p><em>Dove audio e spazio si fondono in un'esperienza immersiva</em></p>
-</div>
+HARMONIA è un progetto di ricerca sperimentale che esplora la connessione tra le emozioni suscitate dalla musica e la loro rappresentazione visiva in un ambiente 3D interattivo. Analizza le tracce audio MP3 caricate dall'utente, estrae caratteristiche acustiche significative utilizzando tecniche di signal processing e predice le dimensioni emotive di Arousal (energia) e Valence (positività) tramite un modello di Machine Learning.
 
-<hr style="height:3px; border:none; background: linear-gradient(90deg, #646cff, #a0a4ff);">
+Queste dimensioni vengono poi mappate per generare un "pianeta" unico in uno spazio 3D, con caratteristiche visive (colore, effetti) che riflettono l'essenza emotiva del brano.
 
-## 🌌 Panoramica
+**Versione Corrente:** v1 (Demo Interattiva)
 
-**Harmonia** trasforma il tuo audio in un viaggio visivo attraverso l'universo. Carica un file MP3 e osserva come la musica prende vita in un cosmos 3D interattivo:
+## Tecnologie Chiave 🚀
 
-- 🎵 **Analisi audio avanzata** - BPM, tonalità, mood ed energia del brano
-- 🪐 **Pianeti dinamici** - Generati dalle caratteristiche uniche della tua musica
-- ✨ **Campo stellare interattivo** - Naviga lo spazio con controlli intuitivi
-- 🌈 **Visualizzazione emozionale** - Colori e animazioni basate sul mood del brano
+*   **Frontend:** React, Vite, Three.js, GSAP, Plotly.js
+*   **Analisi Audio & ML Backend (integrato in dev):** Python, Librosa, Scikit-learn (presumibilmente, basato su `predict_new_audio.py`)
+*   **Dataset (per training modello):** DEAM (Database for Emotional Analysis in Music)
 
-<details>
-<summary><b>💫 Guarda l'effetto di zoom cosmico</b></summary>
-<br>
-<p>L'effetto di zoom ti porta dal campo stellare verso pianeti unici generati dalle caratteristiche audio:
+## Prerequisiti 📋
 
-```
-Carica MP3 → Analisi → Zoom verso il pianeta unico della tua musica
-```
-- 🔷 Musica calma e malinconica: Pianeti blu in regioni tranquille
-- 🟣 Musica energica e positiva: Pianeti viola/magenta in aree dinamiche
-- 🌠 Naviga liberamente tra le stelle con controlli orbitali
-</p>
-</details>
+*   **Node.js e npm:** Assicurati di avere Node.js (versione 18 o superiore consigliata) e npm installati. Puoi scaricarli da [https://nodejs.org/](https://nodejs.org/)
+*   **Python:** È necessaria un'installazione di Python (versione 3.9 o superiore consigliata). Puoi scaricarla da [https://www.python.org/](https://www.python.org/)
+*   **Ambiente Virtuale Python:** Il progetto si aspetta un ambiente virtuale Python configurato nella sottocartella `DEAM_project/.venv`.
 
-## 🚀 Per iniziare
+## Setup e Avvio (Demo v1) 🛠️
 
-```bash
-# Clona il repository
-git clone https://github.com/tuo-username/harmonia.git
+1.  **Clona il Repository (se non già fatto):**
+    ```bash
+    git clone <URL_DEL_TUO_REPOSITORY>
+    cd sito-deam # O il nome della cartella principale
+    ```
 
-# Naviga nella directory
-cd harmonia
+2.  **Configura l'Ambiente Virtuale Python:**
+    *   Naviga nella cartella `DEAM_project`:
+        ```bash
+        cd DEAM_project
+        ```
+    *   Crea l'ambiente virtuale (se non esiste):
+        ```bash
+        python -m venv .venv
+        ```
+    *   Attiva l'ambiente virtuale:
+        *   **Windows (cmd/powershell):** `.\.venv\Scripts\activate`
+        *   **Linux/macOS (bash/zsh):** `source .venv/bin/activate`
+    *   Installa le dipendenze Python:
+        ```bash
+        pip install -r requirements.txt
+        ```
+    *   Disattiva l'ambiente virtuale (opzionale, verrà riattivato dallo script Vite):
+        ```bash
+        deactivate
+        ```
+    *   Torna alla cartella principale del progetto:
+        ```bash
+        cd ..
+        ```
 
-# Installa le dipendenze
-npm install
+3.  **Installa le Dipendenze Node.js:**
+    Dalla cartella principale del progetto (`sito-deam` o simile):
+    ```bash
+    npm install
+    ```
 
-# Avvia l'applicazione in modalità sviluppo
-npm run dev
-```
+4.  **Avvia il Server di Sviluppo (Frontend + API Python integrata):**
+    ```bash
+    npm run dev
+    ```
+    Questo comando avvierà:
+    *   Il server di sviluppo Vite per il frontend React.
+    *   Il middleware custom definito in `vite.config.js` che gestisce l'endpoint `/api/analyze` e lancia lo script Python `DEAM_project/predict_new_audio.py` quando carichi un file MP3.
 
-## 🛠️ Tecnologie
+5.  **Apri l'Applicazione:**
+    Apri il tuo browser e naviga all'indirizzo fornito da Vite (solitamente `http://localhost:5173` o una porta simile).
 
-Harmonia è costruito con un mix potente di tecnologie moderne:
+Ora dovresti essere in grado di caricare un file MP3 e vedere la visualizzazione 3D generata! ✨
 
-| Tecnologia | Utilizzo |
-|------------|----------|
-| **React** | Framework UI reattivo |
-| **Three.js** | Visualizzazione 3D e campo stellare |
-| **GSAP** | Animazioni fluide e transizioni |
-| **Vite** | Bundling e sviluppo veloce |
+## Struttura del Progetto 📁
 
-## 🎮 Interazione
+*   `public/`: File statici (immagini, icone).
+*   `src/`: Codice sorgente del frontend React.
+    *   `assets/`: Risorse statiche importate nel codice.
+    *   `components/`: Componenti React riutilizzabili (UI, 3D, Info).
+    *   `App.jsx`: Componente principale dell'applicazione.
+    *   `main.jsx`: Entry point dell'applicazione React.
+    *   `App.css`, `index.css`: Fogli di stile.
+*   `DEAM_project/`: Codice e risorse per l'analisi audio e il modello ML Python.
+    *   `.venv/`: Ambiente virtuale Python (da creare).
+    *   `predict_new_audio.py`: Script Python eseguito dall'API Vite per l'analisi.
+    *   `requirements.txt`: Dipendenze Python.
+    *   *(Altre cartelle/file relativi al dataset DEAM e analisi)*
+*   `vite.config.js`: Configurazione di Vite, include il plugin per l'API Python.
+*   `package.json`: Dipendenze e script Node.js.
+*   `README.md`: Questo file.
 
-<table>
-  <tr>
-    <td width="50%">
-      <h3>🖱️ Controlli:</h3>
-      <ul>
-        <li><b>Click + Trascina</b>: Ruota la visuale</li>
-        <li><b>Scroll</b>: Zoom avanti/indietro</li>
-        <li><b>Right-click + Trascina</b>: Sposta la visuale</li>
-      </ul>
-    </td>
-    <td width="50%">
-      <h3>🔮 Flusso utente:</h3>
-      <ol>
-        <li>Carica un file MP3</li>
-        <li>Osserva l'analisi in corso</li>
-        <li>Esplora il pianeta generato</li>
-        <li>Torna alla mappa stellare</li>
-      </ol>
-    </td>
-  </tr>
-</table>
+## Prossimi Passi 🔮
 
-## 🧪 Funzionalità future
-
-- [ ] API di analisi audio lato server
-- [ ] Esportazione delle visualizzazioni come NFT
-- [ ] Modalità collaborativa in tempo reale
-- [ ] Integrazione con servizi di streaming musicale
-- [ ] Supporto per tracce multiple e playlist
-
-## 🤝 Contribuisci
-
-Le pull request sono benvenute! Per cambiamenti maggiori, apri prima un issue per discutere cosa vorresti modificare.
-
-## 📜 Licenza
-
-[MIT](https://choosealicense.com/licenses/mit/)
-
-<hr>
-
-<div align="center">
-  <p>Creato con 💜 dalla <b>Deam Team</b></p>
-  <p>© 2025 Harmonia Project</p>
-</div>
-
-<!-- Effetto animato creato con HTML e CSS per il README quando visualizzato su GitHub -->
-<div align="center">
-  <img src="https://i.imgur.com/YmFTefF.gif" alt="Harmonia Demo Animation" width="600" />
-</div>
+Consulta la sezione "Orizzonti Futuri" nella pagina informativa dell'applicazione (scrollando verso il basso) per scoprire le evoluzioni pianificate per HARMONIA!

@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'DEAM_project/.venv/**'] }, // Aggiunto ignore per .venv
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
