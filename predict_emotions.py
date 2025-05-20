@@ -387,6 +387,73 @@ def save_model(model, scaler, feature_names, target_name, output_dir='models'):
     
     print(f"\nModello per {target_name} salvato in {model_path}")
 
+# Funzione per visualizzare le previsioni
+
+def plot_predictions(y_true, y_pred, target_name, results_dir):
+    """
+    Visualizza un scatter plot delle previsioni vs valori reali
+    """
+    plt.figure(figsize=(10, 6))
+    plt.scatter(y_true, y_pred, alpha=0.5)
+    min_val = min(min(y_true), min(y_pred))
+    max_val = max(max(y_true), max(y_pred))
+    plt.plot([min_val, max_val], [min_val, max_val], 'r--', label='Perfect Prediction')
+    plt.xlabel(f'True {target_name.capitalize()}')
+    plt.ylabel(f'Predicted {target_name.capitalize()}')
+    plt.title(f'Predicted vs True {target_name.capitalize()} Values')
+    plt.legend()
+    r2 = r2_score(y_true, y_pred)
+    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+    plt.text(0.05, 0.95, f'R² = {r2:.4f}\nRMSE = {rmse:.4f}', 
+             transform=plt.gca().transAxes, 
+             bbox=dict(facecolor='white', alpha=0.8))
+    plt.tight_layout()
+    plt.savefig(os.path.join(results_dir, f'{target_name}_predictions.png'))
+    plt.show()
+
+# Funzione per visualizzare le previsioni di tutti i modelli
+
+def plot_all_model_predictions(X_train, X_test, y_train, y_test, best_model, rf_model, target_name, results_dir):
+    """
+    Visualizza i grafici di previsione per il modello ottimizzato e Random Forest
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+    
+    # Plot per il modello ottimizzato
+    y_pred_test = best_model.predict(X_test)
+    axes[0].scatter(y_test, y_pred_test, alpha=0.5)
+    min_val = min(min(y_test), min(y_pred_test))
+    max_val = max(max(y_test), max(y_pred_test))
+    axes[0].plot([min_val, max_val], [min_val, max_val], 'r--')
+    axes[0].set_title('Optimized Model')
+    axes[0].set_xlabel('True Values')
+    axes[0].set_ylabel('Predicted Values')
+    r2 = r2_score(y_test, y_pred_test)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred_test))
+    axes[0].text(0.05, 0.95, f'R² = {r2:.4f}\nRMSE = {rmse:.4f}', 
+                 transform=axes[0].transAxes,
+                 bbox=dict(facecolor='white', alpha=0.8))
+
+    # Plot per Random Forest
+    y_pred_rf = rf_model['model'].predict(rf_model['scaler'].transform(X_test))
+    axes[1].scatter(y_test, y_pred_rf, alpha=0.5)
+    min_val = min(min(y_test), min(y_pred_rf))
+    max_val = max(max(y_test), max(y_pred_rf))
+    axes[1].plot([min_val, max_val], [min_val, max_val], 'r--')
+    axes[1].set_title('Random Forest')
+    axes[1].set_xlabel('True Values')
+    axes[1].set_ylabel('Predicted Values')
+    r2_rf = r2_score(y_test, y_pred_rf)
+    rmse_rf = np.sqrt(mean_squared_error(y_test, y_pred_rf))
+    axes[1].text(0.05, 0.95, f'R² = {r2_rf:.4f}\nRMSE = {rmse_rf:.4f}', 
+                 transform=axes[1].transAxes,
+                 bbox=dict(facecolor='white', alpha=0.8))
+
+    plt.suptitle(f'Model Comparison for {target_name.capitalize()}')
+    plt.tight_layout()
+    plt.savefig(os.path.join(results_dir, f'{target_name}_model_comparison.png'))
+    plt.show()
+
 # Funzione principale
 def main():
     # Carica i dati
@@ -440,6 +507,19 @@ def main():
     print(f"R²: {arousal_r2:.4f}")
     print(f"RMSE: {arousal_rmse:.4f}")
     
+    # Visualizza le previsioni per arousal
+    plot_predictions(y_test_arousal, y_pred_arousal, 'arousal', results_dir)
+    
+    # Visualizza le previsioni di tutti i modelli
+    plot_all_model_predictions(
+        X_train_arousal, X_test_arousal, 
+        y_train_arousal, y_test_arousal,
+        best_arousal_model, 
+        arousal_results['Random Forest'],
+        'arousal',
+        results_dir
+    )
+    
     # Analizza l'importanza delle feature per arousal
     analyze_feature_importance(best_arousal_model, feature_names_arousal, 'arousal')
     
@@ -478,6 +558,17 @@ def main():
     print(f"R²: {valence_r2:.4f}")
     print(f"RMSE: {valence_rmse:.4f}")
     
+    # Visualizza le previsioni per valence
+    plot_predictions(y_test_valence, y_pred_valence, 'valence', results_dir)
+
+    plot_all_model_predictions(
+        X_train_valence, X_test_valence, 
+        y_train_valence, y_test_valence,
+        best_valence_model, 
+        valence_results['Random Forest'],
+        'valence',
+        results_dir
+    )
     # Analizza l'importanza delle feature per valence
     analyze_feature_importance(best_valence_model, feature_names_valence, 'valence')
     

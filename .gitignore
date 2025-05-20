@@ -7,3 +7,20 @@ emotion_prediction_results/
 harmonia-sonic-canvas/
 __pycache__/
 
+# Dataset directories
+EmoMusic/
+MediaEval_Jamendo/
+PMEmo/
+
+# Intermediate files
+all_datasets_annotations.csv
+all_datasets_metadata.csv
+
+# Log files
+*.log
+dataset_integration.log
+datasets_verification.log
+
+# Reports
+dataset_verification_report.txt
+
